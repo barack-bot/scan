@@ -1,0 +1,84 @@
+{{ define "content" }}
+<div class="container-sm" style="margin: 0 auto; max-width: 1280px; padding: 0 var(--spacing-xl);">
+
+    <!-- Subscription Status Banner -->
+    {{if eq .SubscriptionStatus "trial"}}
+    <div class="alert" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; border-radius: var(--radius-md); padding: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+        <span>⏰ <strong>Trial Active</strong> — You have <strong>{{.ScansRemaining}}</strong> scans remaining this month. {{if .TrialExpiresAt}}Expires {{.TrialExpiresAt}}{{end}}</span>
+        <a href="/payments" style="margin-left: var(--spacing-sm); color: #93c5fd; text-decoration: underline;">Upgrade Plan →</a>
+    </div>
+    {{else if eq .SubscriptionStatus "active"}}
+    <div class="alert" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; border-radius: var(--radius-md); padding: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+        <span>✅ <strong>{{.Plan}} Plan Active</strong> — {{.ScanCountThisMonth}}/{{.ScanLimit}} scans used this month.</span>
+    </div>
+    {{else if eq .SubscriptionStatus "suspended"}}
+    <div class="alert" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; border-radius: var(--radius-md); padding: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+        <span>🚫 <strong>Account Suspended</strong> — Please renew your subscription to continue scanning.</span>
+        <a href="/payments" style="margin-left: var(--spacing-sm); color: #fca5a5; text-decoration: underline;">Renew Now →</a>
+    </div>
+    {{end}}
+
+    <!-- Notifications -->
+    {{if .Notifications}}
+    <div class="card" style="margin-bottom: var(--spacing-lg); border-left: 3px solid #f59e0b;">
+        <div class="card-header">
+            <h3 style="font-size: 1rem;">🔔 Notifications</h3>
+        </div>
+        <div id="notifications-list">
+            {{range .Notifications}}
+            <div style="padding: var(--spacing-sm) var(--spacing-md); border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="font-size: 0.9rem;">{{.Title}}</strong>
+                    <p class="text-small text-muted" style="margin: 2px 0 0 0;">{{.Message}}</p>
+                </div>
+                <button class="btn-secondary btn-sm" style="font-size: 0.75rem; padding: 2px 8px;"
+                    hx-post="/api/notifications/{{.ID}}/read"
+                    hx-target="closest div"
+                    hx-swap="outerHTML">
+                    ✓ Dismiss
+                </button>
+            </div>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+
+    <div class="grid-3" style="margin-bottom: var(--spacing-xl);">
+        <div class="card">
+            <h4 class="text-muted">Total Scan Requests</h4>
+            <div class="stat-number" style="font-size: 3rem; margin: var(--spacing-sm) 0;">{{.TotalScans}}</div>
+            <span class="badge badge-success">Active Pipeline</span>
+        </div>
+        <div class="card">
+            <h4 class="text-muted">Open Findings</h4>
+            <div class="stat-number" style="font-size: 3rem; color: var(--error); margin: var(--spacing-sm) 0;">{{.CriticalFindings}}</div>
+            <span class="badge badge-critical">Action Advised</span>
+        </div>
+        <div class="card">
+            <h4 class="text-muted">Scan Quota</h4>
+            <div class="stat-number" style="font-size: 3rem; color: var(--info); margin: var(--spacing-sm) 0;">{{.ScansRemaining}}</div>
+            <span class="badge badge-info">Scans Left</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 class="card-title">Active Vulnerability Queue</h3>
+                <p class="text-muted" style="margin-bottom: 0;">Realtime execution status of current targeted runtime finger-printing passes.</p>
+            </div>
+        </div>
+
+        <div id="scan-rows">
+            {{range .Scans}}
+            {{template "scan_row" .}}
+            {{else}}
+            <div style="text-align: center; padding: var(--spacing-lg);">
+                <span class="text-muted">No scans yet. Start your first security assessment from the Scanner page.</span>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+</div>
+{{ end }}

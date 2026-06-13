@@ -1,0 +1,50 @@
+{{define "scan_row"}}
+<div id="scan-{{.Scan.ID}}" 
+     class="scan-row" 
+     data-scan-id="{{.Scan.ID}}" 
+     data-scan-status="{{.Scan.Status}}" 
+     {{if eq .Scan.Status "running"}}
+     hx-get="/scan/{{.Scan.ID}}/results" 
+     hx-trigger="every 2s" 
+     hx-target="this" 
+     hx-swap="outerHTML"
+     {{else if eq .Scan.Status "pending"}}
+     hx-get="/scan/{{.Scan.ID}}/results" 
+     hx-trigger="every 5s" 
+     hx-target="this" 
+     hx-swap="outerHTML"
+     {{end}}
+     style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); border-bottom: 1px solid var(--border-subtle); width: 100%;">
+    
+    <div>
+        <strong>{{.Scan.TargetURL}}</strong>
+        <br>
+        <span class="text-small text-muted">Target Status Context: Profile Matrix Archetype</span>
+    </div>
+    
+    <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+        {{if eq .Scan.Status "pending"}}
+            <span class="badge badge-info" style="background-color: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: var(--radius-sm);">Pending</span>
+        {{else if eq .Scan.Status "running"}}
+            <span class="badge badge-info" style="background-color: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: var(--radius-sm); font-weight: bold;">
+                Running ({{.Scan.Progress}}%)
+            </span>
+            <div class="progress" style="width: 100px; height: 6px; background: var(--border-subtle); border-radius: 3px; overflow: hidden;">
+                <div class="progress-bar" style="width: {{.Scan.Progress}}%; height: 100%; background: #0284c7; transition: width 0.3s ease;"></div>
+            </div>
+        {{else if eq .Scan.Status "completed"}}
+            <span class="badge badge-success" style="background-color: #d1fae5; color: #065f46; padding: 4px 8px; border-radius: var(--radius-sm); font-weight: bold;">
+                Completed ({{.FindingCount}} Findings)
+            </span>
+            <a href="/scan/{{.Scan.ID}}" class="btn-secondary btn-sm" style="margin-left: var(--spacing-sm); text-decoration: none; padding: 4px var(--spacing-sm); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+                View Core Findings
+            </a>
+            <a href="/report/{{.Scan.ID}}" class="btn-secondary btn-sm" style="text-decoration: none; padding: 4px var(--spacing-sm); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);">
+                Download Report
+            </a>
+        {{else if eq .Scan.Status "failed"}}
+            <span class="badge badge-error" style="background-color: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: var(--radius-sm);">Failed</span>
+        {{end}}
+    </div>
+</div>
+{{end}}

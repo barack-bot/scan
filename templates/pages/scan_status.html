@@ -1,0 +1,103 @@
+{{define "content"}}
+<div class="container" style="padding: var(--spacing-xl) var(--spacing-xl);">
+    <div style="margin-bottom: var(--spacing-xl);">
+        <h1>Scan #{{.Scan.ID}} Status</h1>
+        <p class="text-muted">{{.Scan.TargetURL}}</p>
+    </div>
+
+    <div class="grid-2" style="gap: var(--spacing-xl);">
+        <div class="card">
+            <div class="card-header">
+                <h3>Scan Details</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
+                <div>
+                    <span class="text-small text-muted">Status</span>
+                    <div><span class="badge badge-{{if eq .Scan.Status "completed"}}success{{else if eq .Scan.Status "running"}}info{{else if eq .Scan.Status "failed"}}error{{else}}medium{{end}}">{{.Scan.Status | toUpper}}</span></div>
+                </div>
+                <div>
+                    <span class="text-small text-muted">Type</span>
+                    <div><span class="badge badge-info">{{.Scan.ScanType | toUpper}}</span></div>
+                </div>
+                <div>
+                    <span class="text-small text-muted">Progress</span>
+                    <div class="progress" style="margin-top: 4px;">
+                        <div class="progress-bar" style="width: {{.Scan.Progress}}%;"></div>
+                    </div>
+                    <span class="text-small text-muted">{{.Scan.Progress}}%</span>
+                </div>
+                <div>
+                    <span class="text-small text-muted">Started</span>
+                    <div>{{if .Scan.StartedAt}}{{.Scan.StartedAt.Format "Jan 02, 2006 15:04"}}{{else}}Not started{{end}}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Actions</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+                <a href="/report/{{.Scan.ID}}" class="btn-primary">📄 View Full Report</a>
+                <a href="/report/{{.Scan.ID}}/download?format=html" class="btn-secondary">⬇ Download Report (HTML)</a>
+                <a href="/report/{{.Scan.ID}}/download?format=json" class="btn-secondary">⬇ Download Report (JSON)</a>
+                <a href="/report/{{.Scan.ID}}/download?format=md" class="btn-secondary">⬇ Download Report (Markdown)</a>
+            </div>
+        </div>
+    </div>
+
+    {{if .Findings}}
+    <div class="card" style="margin-top: var(--spacing-xl);">
+        <div class="card-header">
+            <h3>Findings ({{len .Findings}})</h3>
+        </div>
+        <div id="findings">
+            {{range .Findings}}
+                {{template "finding_card" .}}
+            {{else}}
+                <p class="text-muted" style="text-align: center; padding: var(--spacing-xl);">No findings found.</p>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+
+    {{if eq .Scan.Status "running"}}
+    <div id="scan-progress-container">
+        {{if eq .Scan.Status "running"}}
+        <div class="alert alert-info" id="scan-progress-alert"
+             hx-get="/scan/{{.Scan.ID}}/results"
+             hx-trigger="every 3s"
+             hx-target="#scan-progress-container"
+             hx-swap="innerHTML">
+            <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                <div class="spinner" style="width: 20px; height: 20px; border: 2px solid var(--text-light); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <span>Scan in progress — auto-refreshing every 3s...</span>
+            </div>
+        </div>
+        {{else if eq .Scan.Status "completed"}}
+        <div class="alert alert-success" style="margin-top: var(--spacing-xl);">
+            <span>✅ Scan completed successfully!</span>
+        </div>
+        {{else if eq .Scan.Status "failed"}}
+        <div class="alert alert-error" style="margin-top: var(--spacing-xl);">
+            <span>❌ Scan failed. Please check logs.</span>
+        </div>
+        {{end}}
+    </div>
+    {{else if eq .Scan.Status "completed"}}
+    <div class="alert alert-success" style="margin-top: var(--spacing-xl);">
+        <span>✅ Scan completed successfully!</span>
+    </div>
+    {{else if eq .Scan.Status "failed"}}
+    <div class="alert alert-error" style="margin-top: var(--spacing-xl);">
+        <span>❌ Scan failed. Please check logs.</span>
+    </div>
+    {{end}}
+</div>
+
+<style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{{end}}

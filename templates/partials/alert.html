@@ -1,0 +1,17 @@
+{{define "alert"}}
+<div class="alert alert-{{.Type}}" role="alert" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
+    <span>{{.Icon}}</span>
+    <div>
+        <strong>{{.Title}}</strong>
+        <p class="text-small">{{.Message}}</p>
+    </div>
+    <button @click="show = false" style="background: none; border: none; color: inherit; cursor: pointer; margin-left: auto;">✕</button>
+</div>
+
+<style>
+.alert-success { background: rgba(16, 185, 129, 0.1); border-color: #10b981; color: #10b981; }
+.alert-error { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; color: #ef4444; }
+.alert-warning { background: rgba(245, 158, 11, 0.1); border-color: #f59e0b; color: #f59e0b; }
+.alert-info { background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #3b82f6; }
+</style>
+{{end}}

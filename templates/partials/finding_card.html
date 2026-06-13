@@ -1,0 +1,70 @@
+{{define "finding_card"}}
+<div class="finding-card" style="border-bottom: 1px solid var(--border-subtle); padding: var(--spacing-lg);">
+    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: var(--spacing-md); margin-bottom: var(--spacing-md);">
+        <div>
+            <div style="display: flex; align-items: center; gap: var(--spacing-sm); flex-wrap: wrap;">
+                <span class="badge badge-{{.Severity}}">{{.Severity | toUpper}}</span>
+                <span class="badge badge-info" style="background: rgba(59, 130, 246, 0.1);">{{.Category | toUpper}}</span>
+                {{if .CVEID}}
+                <span class="badge" style="background: rgba(16, 185, 129, 0.1);">{{.CVEID}}</span>
+                {{end}}
+                <!-- Finding Status Badge -->
+                <span class="badge" style="background: {{if eq .Status "resolved"}}rgba(16,185,129,0.2);color:#6ee7b7{{else if eq .Status "acknowledged"}}rgba(245,158,11,0.2);color:#fbbf24{{else}}rgba(239,68,68,0.2);color:#fca5a5{{end}}">
+                    {{.Status | toUpper}}
+                </span>
+                {{if .AffectedComponent}}
+                <span class="badge badge-cat">{{.AffectedComponent}}</span>
+                {{end}}
+            </div>
+            <h4 style="margin-top: var(--spacing-sm);">{{.Title}}</h4>
+        </div>
+        <div style="display: flex; gap: var(--spacing-xs); align-items: center;">
+            <!-- Status Workflow Buttons -->
+            {{if ne .Status "acknowledged"}}
+            <button class="btn-secondary btn-sm" style="font-size: 0.75rem; padding: 2px 8px; border-color: #f59e0b; color: #f59e0b;"
+                hx-post="/api/findings/{{.ID}}/status"
+                hx-vals='{"status":"acknowledged"}'
+                hx-target="closest .finding-card"
+                hx-swap="outerHTML">
+                👁 Acknowledge
+            </button>
+            {{end}}
+            {{if ne .Status "resolved"}}
+            <button class="btn-secondary btn-sm" style="font-size: 0.75rem; padding: 2px 8px; border-color: #10b981; color: #10b981;"
+                hx-post="/api/findings/{{.ID}}/status"
+                hx-vals='{"status":"resolved"}'
+                hx-target="closest .finding-card"
+                hx-swap="outerHTML">
+                ✅ Resolve
+            </button>
+            {{else}}
+            <span style="font-size: 0.75rem; color: #6ee7b7; padding: 2px 8px;">
+                Resolved{{if .ResolvedAt}} {{.ResolvedAt.Format "Jan 02"}}{{end}}
+            </span>
+            {{end}}
+            <button class="btn-secondary btn-sm" onclick="toggleDetails('finding-{{.ID}}')">Details ▼</button>
+        </div>
+    </div>
+    
+    <div id="finding-{{.ID}}" style="display: none;">
+        <p class="text-muted" style="margin-bottom: var(--spacing-md);">{{.Description}}</p>
+        
+        {{if .ODPCSection}}
+        <div style="background: var(--bg-elevated); padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md);">
+            <strong>📖 DPA 2019 Reference:</strong>
+            <p class="text-small text-muted">{{.ODPCSection}}</p>
+        </div>
+        {{end}}
+        
+        <div style="background: var(--bg-elevated); padding: var(--spacing-md); border-radius: var(--radius-md); margin-bottom: var(--spacing-md);">
+            <strong>🔧 Remediation:</strong>
+            <p class="text-small text-muted">{{.Remediation}}</p>
+        </div>
+        
+        <div>
+            <strong>📸 Evidence:</strong>
+            <p class="text-small text-muted">{{.Evidence}}</p>
+        </div>
+    </div>
+</div>
+{{end}}

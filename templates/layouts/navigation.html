@@ -1,0 +1,74 @@
+{{define "navigation"}}
+<nav class="nav" x-data="{ mobileOpen: false }">
+    <div class="logo">
+        <div class="logo-mark">
+            <span class="lb">[</span>
+            <div class="sl"></div>
+            <span class="rb">]</span>
+        </div>
+        <a href="/" class="logo-txt">KE-SCAN</a>
+    </div>
+
+    <button class="nav-toggle" @click="mobileOpen = !mobileOpen" :aria-expanded="mobileOpen.toString()" aria-label="Toggle navigation">
+        Menu
+    </button>
+    
+    <div class="nav-links" :class="{ 'open': mobileOpen }" x-cloak>
+        <a href="/#features">Features</a>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/#pricing">Pricing</a>
+        {{if .IsAuthenticated}}
+            <a href="/dashboard">Dashboard</a>
+            <a href="/scan/new">New Scan</a>
+        {{end}}
+        <a href="/#how-it-works">Docs</a>
+    </div>
+    
+    <div class="nav-actions">
+        {{if .IsAuthenticated}}
+            <div class="user-menu" x-data="{ open: false }">
+                <button @click="open = !open" class="btn-secondary btn-sm">
+                    {{.UserEmail}}
+                    <span>▼</span>
+                </button>
+                <div x-show="open" @click.away="open = false" class="dropdown-menu">
+                    <a href="/account">Account Settings</a>
+                    <a href="/dashboard">Dashboard</a>
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        {{else}}
+            <a href="/login" class="btn-secondary btn-sm">Sign In</a>
+            <a href="/register" class="btn-primary btn-sm">Get Started</a>
+        {{end}}
+    </div>
+</nav>
+
+<style>
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 60px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) 0;
+    min-width: 180px;
+    z-index: 1000;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.dropdown-menu a:hover {
+    background: rgba(14, 165, 255, 0.08);
+    color: var(--accent);
+}
+</style>
+{{end}}
+
+{{/* footer moved to layouts/footer.html */}}

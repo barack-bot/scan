@@ -1,0 +1,153 @@
+{{define "content"}}
+<div class="container" style="padding: var(--spacing-xl) var(--spacing-xl);">
+    <div style="margin-bottom: var(--spacing-xl);">
+        <h1>Account Settings</h1>
+        <p class="text-muted">Manage your profile and security preferences</p>
+    </div>
+
+    <div class="grid-2" style="gap: var(--spacing-xl);">
+        <div class="card">
+            <div class="card-header">
+                <h3>Profile Information</h3>
+                <p class="text-small text-muted">Update your personal information</p>
+            </div>
+            
+            <form hx-post="/account" hx-target="#profile-result" hx-swap="innerHTML">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="name" class="form-input" value="{{if .User}}{{.User.Name}}{{end}}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" class="form-input" value="{{if .User}}{{.User.Email}}{{end}}" required>
+                    <p class="text-small text-muted">Changing your email will require re-verification</p>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn-primary">Update Profile</button>
+                </div>
+                
+                <div id="profile-result"></div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Change Password</h3>
+                <p class="text-small text-muted">Keep your account secure</p>
+            </div>
+            
+            <form hx-post="/account" hx-target="#password-result" hx-swap="innerHTML">
+                <input type="hidden" name="action" value="password">
+                <div class="form-group">
+                    <label class="form-label">Current Password</label>
+                    <input type="password" name="current_password" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">New Password</label>
+                    <input type="password" name="new_password" class="form-input" required>
+                    <p class="text-small text-muted">Minimum 8 characters with at least one number and one special character</p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Confirm New Password</label>
+                    <input type="password" name="confirm_password" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn-primary">Change Password</button>
+                </div>
+                
+                <div id="password-result"></div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>API Keys</h3>
+                <p class="text-small text-muted">Access KE-SCAN API programmatically</p>
+            </div>
+            
+            <div id="api-keys-list">
+                {{range .APIKeys}}
+                <div class="api-key-item" style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); border-bottom: 1px solid var(--border-subtle);">
+                    <div>
+                        <code style="background: var(--bg-elevated); padding: var(--spacing-xs) var(--spacing-sm); border-radius: var(--radius-sm);">{{.Key}}</code>
+                        <div class="text-small text-muted">Created: {{.CreatedAt.Format "Jan 02, 2006"}}</div>
+                    </div>
+                    <button class="btn-danger btn-sm" hx-delete="/api/keys/{{.ID}}" hx-confirm="Delete this API key?" hx-target="#api-keys-list" hx-swap="outerHTML">Revoke</button>
+                </div>
+                {{else}}
+                <p class="text-muted" style="text-align: center; padding: var(--spacing-xl);">No API keys yet</p>
+                {{end}}
+            </div>
+            
+            <div style="margin-top: var(--spacing-lg);">
+                <button class="btn-secondary" hx-post="/api/keys" hx-target="#api-keys-list" hx-swap="outerHTML">+ Generate New API Key</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Billing Information</h3>
+                <p class="text-small text-muted">Manage your subscription and payment methods</p>
+            </div>
+            
+            <div class="billing-info">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                    <div>
+                        <strong>Current Plan</strong>
+                        <div class="text-large" style="color: var(--accent);">{{if .CurrentPlan}}{{.CurrentPlan}}{{else}}Free Tier{{end}}</div>
+                    </div>
+                    <a href="/payments" class="btn-secondary btn-sm">Upgrade Plan</a>
+                </div>
+                
+                <div style="margin-top: var(--spacing-lg);">
+                    <strong>Next Billing Date</strong>
+                    <div>{{if .NextBillingDate}}{{.NextBillingDate}}{{else}}N/A{{end}}</div>
+                </div>
+                
+                <div style="margin-top: var(--spacing-lg);">
+                    <strong>Payment Method</strong>
+                    <div>{{if .PaymentMethod}}M-PESA - {{.PhoneNumber}}{{else}}No payment method on file{{end}}</div>
+                    <button class="btn-secondary btn-sm" style="margin-top: var(--spacing-sm);" hx-get="/payments/method" hx-target="#payment-modal" hx-swap="innerHTML">Update Payment Method</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="border-color: var(--error);">
+            <div class="card-header">
+                <h3 style="color: var(--error);">Danger Zone</h3>
+                <p class="text-small text-muted">Irreversible actions</p>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>Delete Account</strong>
+                    <p class="text-small text-muted">Permanently delete your account and all associated data</p>
+                </div>
+                <button class="btn-danger" hx-delete="/account" hx-confirm="Are you absolutely sure? This action cannot be undone!" hx-target="body" hx-swap="outerHTML">Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="payment-modal"></div>
+
+<script>
+    document.body.addEventListener('showMessage', function(evt) {
+        const message = evt.detail.value || evt.detail;
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success';
+        alertDiv.innerHTML = message;
+        alertDiv.style.position = 'fixed';
+        alertDiv.style.top = '80px';
+        alertDiv.style.right = '20px';
+        alertDiv.style.zIndex = '1000';
+        document.body.appendChild(alertDiv);
+        setTimeout(() => alertDiv.remove(), 3000);
+    });
+</script>
+{{end}}

@@ -1,0 +1,141 @@
+{{define "content"}}
+<div class="container" style="padding: var(--spacing-xl) var(--spacing-xl);">
+    <!-- Report Header -->
+    <div style="margin-bottom: var(--spacing-xl);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-md);">
+            <div>
+                <h1>Security Report</h1>
+                <p class="text-muted">{{.Report.TargetURL}} · {{.Report.ScanDate.Format "January 02, 2006"}}</p>
+            </div>
+            <div style="display: flex; gap: var(--spacing-sm);">
+                <button class="btn-secondary btn-sm" hx-get="/report/{{.Report.ScanID}}/download?format=json" hx-target="body">JSON</button>
+                <button class="btn-secondary btn-sm" hx-get="/report/{{.Report.ScanID}}/download?format=html" hx-target="body">HTML</button>
+                <a href="/report/{{.Report.ScanID}}/download?format=pdf" class="btn-primary btn-sm" style="text-decoration: none;">📥 Download PDF</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid-4" style="margin-bottom: var(--spacing-xl);">
+        <div class="card" style="text-align: center;">
+            <div class="stat-number" style="font-size: 2rem; color: var(--error);">{{.Report.Summary.CriticalCount}}</div>
+            <div class="stat-label">Critical</div>
+        </div>
+        <div class="card" style="text-align: center;">
+            <div class="stat-number" style="font-size: 2rem; color: var(--warning);">{{.Report.Summary.HighCount}}</div>
+            <div class="stat-label">High</div>
+        </div>
+        <div class="card" style="text-align: center;">
+            <div class="stat-number" style="font-size: 2rem; color: var(--info);">{{.Report.Summary.MediumCount}}</div>
+            <div class="stat-label">Medium</div>
+        </div>
+        <div class="card" style="text-align: center;">
+            <div class="stat-number" style="font-size: 2rem;">{{.Report.Summary.ComplianceScore}}%</div>
+            <div class="stat-label">Compliance Score</div>
+        </div>
+    </div>
+
+    <!-- Risk Level Badge -->
+    <div class="card" style="margin-bottom: var(--spacing-xl); text-align: center; background: {{if eq .Report.Summary.RiskLevel "Critical"}}rgba(239, 68, 68, 0.1){{else if eq .Report.Summary.RiskLevel "High"}}rgba(245, 158, 11, 0.1){{else}}rgba(16, 185, 129, 0.1){{end}};">
+        <div class="stat-number" style="font-size: 1.5rem;">Overall Risk Level: {{.Report.Summary.RiskLevel}}</div>
+        <p class="text-small text-muted">Based on {{.Report.Summary.TotalFindings}} total findings</p>
+    </div>
+
+    <!-- Top Recommendations -->
+    <div class="card" style="margin-bottom: var(--spacing-xl);">
+        <div class="card-header">
+            <h3>🔧 Top Recommendations</h3>
+            <p class="text-small text-muted">Priority actions to improve your security posture</p>
+        </div>
+        <ol style="padding-left: var(--spacing-lg);">
+            {{range .Report.Recommendations}}
+            <li style="margin-bottom: var(--spacing-md);">{{.}}</li>
+            {{end}}
+        </ol>
+    </div>
+
+    <!-- Vulnerabilities Section -->
+    <div class="card" style="margin-bottom: var(--spacing-xl);">
+        <div class="card-header">
+            <h3>🔴 Vulnerabilities Found</h3>
+        </div>
+        <div id="vulnerabilities-list">
+            {{range .Report.Vulnerabilities}}
+                {{template "finding_card" .}}
+            {{else}}
+                <p class="text-muted" style="text-align: center; padding: var(--spacing-xl);">No vulnerabilities found! 🎉</p>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Compliance Section -->
+    <div class="card" style="margin-bottom: var(--spacing-xl);">
+        <div class="card-header">
+            <h3>📋 ODPC Compliance Check</h3>
+            <p class="text-small text-muted">Data Protection Act 2019 requirements</p>
+        </div>
+        <div id="compliance-list">
+            {{range .Report.Compliance}}
+                {{template "finding_card" .}}
+            {{else}}
+                <p class="text-muted" style="text-align: center; padding: var(--spacing-xl);">All compliance checks passed! ✅</p>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Attack Graph / Exploit Chains -->
+    {{if .Report.AttackGraph}}
+    {{if .Report.AttackGraph.Chains}}
+    <div class="card" style="margin-bottom: var(--spacing-xl); border-left: 3px solid #ef4444;">
+        <div class="card-header">
+            <h3>⛓️ Attack Surface & Exploit Chains</h3>
+            <p class="text-small text-muted">Automatically identified attack paths from detected vulnerabilities</p>
+        </div>
+        <div style="padding: var(--spacing-md);">
+            {{range $i, $chain := .Report.AttackGraph.Chains}}
+            <div style="padding: var(--spacing-md); border-bottom: 1px solid var(--border-subtle); {{if not $i}}{{end}}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-sm);">
+                    <strong style="color: var(--text-primary);">Chain {{inc $i}}: {{$chain.Description}}</strong>
+                    <div style="display: flex; gap: var(--spacing-sm); align-items: center;">
+                        <span class="badge badge-{{$chain.RiskLevel}}">{{$chain.RiskLevel | toUpper}}</span>
+                        <span class="text-small text-muted">Exploitability: {{printf "%.0f" (mul $chain.Exploitability 100)}}%</span>
+                    </div>
+                </div>
+                <div style="font-family: 'Courier New', monospace; font-size: 0.85rem; color: #999; padding-left: var(--spacing-md); line-height: 1.8;">
+                    {{range $j, $step := $chain.Steps}}
+                    <div>{{if lt $j (sub (len $chain.Steps) 1)}}├──{{else}}└──{{end}} {{$step}}</div>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+
+            {{if .Report.AttackGraph.DetectedSoftware}}
+            <div style="margin-top: var(--spacing-md); padding: var(--spacing-md); background: var(--bg-elevated); border-radius: var(--radius-md);">
+                <strong class="text-small text-muted">Detected Software: </strong>
+                {{range .Report.AttackGraph.DetectedSoftware}}
+                <span class="badge badge-cat">{{.}}</span>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+    {{end}}
+
+    <!-- Compliance Progress -->
+    <div class="card" style="margin-bottom: var(--spacing-xl);">
+        <div class="card-header">
+            <h3>Compliance Progress</h3>
+        </div>
+        <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: var(--spacing-xs);">
+                <span>Overall Compliance</span>
+                <span>{{.Report.Summary.ComplianceScore}}%</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar" style="width: {{.Report.Summary.ComplianceScore}}%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,35 @@
+{{define "scan_result"}}
+<div class="scan-result-item" 
+     id="scan-tracker-{{.Scan.ID}}"
+     {{if ne .Scan.Status "completed"}}
+     hx-get="/scan/{{.Scan.ID}}/results" 
+     hx-trigger="every 2s" 
+     hx-target="this"
+     hx-swap="outerHTML"
+     {{end}}
+     style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md); border-bottom: 1px solid var(--border-subtle); width: 100%;">
+    
+    <div style="flex: 1;">
+        <strong style="color: var(--text-primary); display: block; margin-bottom: var(--spacing-xs);">{{.Scan.TargetURL}}</strong>
+        <div style="display: flex; align-items: center; gap: var(--spacing-sm); margin-top: var(--spacing-xs);">
+            <span class="badge badge-{{if eq .Scan.Status "completed"}}success{{else if eq .Scan.Status "running"}}info{{else if eq .Scan.Status "failed"}}error{{else}}medium{{end}}">
+                {{.Scan.Status | toUpper}}
+            </span>
+            <span class="badge badge-info">{{.Scan.ScanType | toUpper}}</span>
+            
+            {{if eq .Scan.Status "completed"}}
+            <a href="/scan/{{.Scan.ID}}" class="btn-secondary btn-sm" style="text-decoration: none; padding: 2px var(--spacing-sm); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.8rem; background: var(--surface);">
+                View Findings Matrix ({{.FindingCount}})
+            </a>
+            {{end}}
+        </div>
+    </div>
+    
+    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: var(--spacing-xs);">
+        <div class="progress" style="width: 120px; height: 6px; background: var(--border-subtle); border-radius: 3px; overflow: hidden;">
+            <div class="progress-bar" style="width: {{.Scan.Progress}}%; height: 100%; background: #0284c7; transition: width 0.4s ease-out;"></div>
+        </div>
+        <span class="text-small text-muted" style="font-size: 0.8rem;">{{.Scan.Progress}}%</span>
+    </div>
+</div>
+{{end}}

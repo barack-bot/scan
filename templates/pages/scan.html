@@ -1,0 +1,93 @@
+{{define "content"}}
+<div class="container" style="padding: var(--spacing-xl) var(--spacing-xl);">
+    <div style="margin-bottom: var(--spacing-xl);">
+        <h1>Target Vulnerability Scanner</h1>
+        <p class="text-muted">Launch automated fingerprinting, CVE correlation, and graph pathfinding audits.</p>
+    </div>
+
+    <div id="ui-alert-banner" style="display: none; margin-bottom: var(--spacing-md); padding: var(--spacing-md); background-color: #fee2e2; border: 1px solid #f87171; border-radius: var(--radius-sm); color: #991b1b;">
+    </div>
+
+    <div class="grid-2" style="gap: var(--spacing-xl); grid-template-columns: 1fr 1fr;">
+        <div class="card">
+            <div class="card-header">
+                <h3>Launch New Scan</h3>
+                <p class="text-small text-muted">Define scope targets for security inspection</p>
+            </div>
+            
+            <form hx-post="/scan" 
+      hx-target="#scan-results" 
+      hx-swap="afterbegin" 
+      hx-indicator="#scan-spinner"
+      onsubmit="event.preventDefault();"
+      hx-on::response-error="
+          const banner = document.getElementById('ui-alert-banner');
+          if (banner) {
+              banner.innerText = 'Scanner Engine Error (' + event.detail.xhr.status + '): ' + event.detail.xhr.responseText;
+              banner.style.display = 'block';
+          }
+      "
+      hx-on::before-request="const banner = document.getElementById('ui-alert-banner'); if (banner) banner.style.display = 'none';">
+                
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
+                <div class="form-group" style="margin-bottom: var(--spacing-md);">
+                    <label class="form-label">Domain Target URL / Hostname</label>
+                    <input type="text" name="target_url" class="form-input" placeholder="e.g., test-scope.ke" required style="width: 100%; border: 1px solid var(--border-subtle); padding: var(--spacing-sm); border-radius: var(--radius-sm);">
+                </div>
+
+                <div class="form-group" style="margin-bottom: var(--spacing-md);">
+                    <label class="form-label">Scan Profile Mode</label>
+                    <select name="scan_type" class="form-input" style="width: 100%; border: 1px solid var(--border-subtle); padding: var(--spacing-sm); border-radius: var(--radius-sm);">
+                        <option value="quick">Quick Discovery (TLS & Headers Only)</option>
+                        <option value="full" selected>Full Scan (All Checks)</option>
+                        <option value="compliance_only">Compliance Mapping (ODPC Audit)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin-top: var(--spacing-lg);">
+                    <button type="submit" class="btn-primary" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                        <span>Execute Scanner Engine</span>
+                        <div id="scan-spinner" class="htmx-indicator" style="width: 16px; height: 16px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card" style="background: var(--surface); min-height: 300px; display: flex; flex-direction: column;">
+            <div class="card-header">
+                <h3>Console Execution Feed</h3>
+            </div>
+            <div id="scan-results" style="flex-grow: 1; padding: var(--spacing-md); overflow-y: auto;">
+                <div id="empty-state-notice" class="text-muted" style="text-align: center; margin-top: var(--spacing-xl);">
+                    <p>Engine idle. Input scope metrics and dispatch scanner above to inspect target environment details.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .htmx-indicator {
+        display: none;
+    }
+    .htmx-request .htmx-indicator {
+        display: inline-block;
+    }
+    .htmx-request.htmx-indicator {
+        display: inline-block;
+    }
+</style>
+
+<script>
+    document.body.addEventListener('htmx:afterOnLoad', function(evt) {
+        if (evt.detail.target.id === 'scan-results' && evt.detail.xhr.status === 200) {
+            const notice = document.getElementById('empty-state-notice');
+            if (notice) notice.remove();
+        }
+    });
+</script>
+{{end}}

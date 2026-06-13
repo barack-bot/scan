@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KE-SCAN | Cyber Security Matrix</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+    <script src="/static/js/htmx.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+
+    <div class="app-layout">
+        {{template "navigation" .}}
+
+        {{if not .IsLandingPage}}
+        <div class="main-window">
+            <header class="app-header">
+                
+                <div class="breadcrumbs">
+                    <span class="breadcrumb-root">Console</span> 
+                    <span class="breadcrumb-separator">/</span> 
+                    <span class="breadcrumb-active" id="breadcrumb-current">Application</span>
+                </div>
+
+                <div class="dropdown-wrapper" x-data="{ accountOpen: false }">
+                    <button @click="accountOpen = !accountOpen" :aria-expanded="accountOpen.toString()" class="dropdown-trigger-btn" aria-label="User account menu">
+                        <div class="user-avatar-circle" title="{{if .UserEmail}}{{.UserEmail}}{{else}}Guest{{end}}">
+                            {{if .UserEmail}}{{slice .UserEmail 0 2 | toUpper}}{{else}}UX{{end}}
+                        </div>
+                        <div class="user-meta">
+                            <div class="user-email-text">{{if .UserEmail}}{{.UserEmail}}{{else}}Guest{{end}}</div>
+                            <div class="user-role-badge">{{if .UserRole}}{{.UserRole}}{{else}}User{{end}}</div>
+                        </div>
+                        <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </button>
+
+                    <div x-show="accountOpen" @click.away="accountOpen = false" class="dropdown-menu-overlay" x-cloak>
+                        <div class="dropdown-header">
+                            <span>Workspace Session</span>
+                        </div>
+                        <a href="/dashboard" class="dropdown-item">
+                            <span class="item-icon">📊</span> Security Dashboard
+                        </a>
+                        <a href="/account" class="dropdown-item item-divider">
+                            <span class="item-icon">⚙️</span> Profile Settings
+                        </a>
+                        <a href="/logout" class="dropdown-item item-logout">
+                            <span class="item-icon">🚪</span> Terminate Session
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <main class="view-port">
+                {{template "content" .}}
+            </main>
+        </div>
+        {{else}}
+        <main>
+            {{template "content" .}}
+        </main>
+        {{end}}
+    </div>
+
+    {{template "footer" .}}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const path = window.location.pathname;
+            const breadcrumb = document.getElementById('breadcrumb-current');
+            if (breadcrumb) {
+                if (path.includes('account')) breadcrumb.innerText = 'Account Settings';
+                else if (path.includes('scan')) breadcrumb.innerText = 'Vulnerability Scanner';
+                else if (path.includes('dashboard')) breadcrumb.innerText = 'Core Dashboard';
+            }
+        });
+
+        // Global toggle function for finding card details
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+    </script>
+</body>
+</html>
